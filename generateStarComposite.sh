@@ -13,6 +13,7 @@ if [[ "clean" == $1 ]]; then
 	rm {red,green,blue}.tif
 	rm -rf nodf
 	rm -rf fits
+	rm -rf alipy_out
 	echo "Clean!"
 	exit 0
 fi
@@ -45,10 +46,13 @@ fi
 if [ ! -e "anchor_1.fits" ]; then
 	convert "${SRC_DIR}/${PREFIX}${ANCHOR}${SUFFIX}" -channel rgb -separate "anchor_%d.fits" 2>&1>/dev/null
 fi
+WIDTH=`identify -format "%w" ${SRC_DIR}/${PREFIX}${ANCHOR}${SUFFIX}`
+HEIGHT=`identify -format "%h" ${SRC_DIR}/${PREFIX}${ANCHOR}${SUFFIX}`
+echo "Generating new image of size ${WIDTH}x${HEIGHT}"
 
 # Create blank channels
 for COLOR in {red,green,blue}; do
-	convert -size 5472x3648 xc:black -depth 32 "${COLOR}.tif" 2>&1>/dev/null
+	convert -size ${WIDTH}x${HEIGHT} xc:black -depth 32 "${COLOR}.tif" 2>&1>/dev/null
 done
 
 for i in $(seq 1 $COUNT); do
@@ -78,6 +82,7 @@ for i in $(seq 1 $COUNT); do
 			convert blue.tif "alipy_out/${BASE_FITS}_2_affineremap.fits" -evaluate-sequence add -depth 32 blue.tif 2>&1>/dev/null
 		done
 
+		exit 1
 		rm fits/*
 		rm alipy_out/*
 	fi
